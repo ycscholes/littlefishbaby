@@ -4,9 +4,9 @@
 blablabla
 
 ### 技术栈
-**后端:** Nginx + PHP 7.0 + Lumen + Restful
-**前端:** React + Mobx
-**移动端:** React Native (L)
+**后端:** Nginx + PHP 7.0 + Lumen + Restful <br>
+**前端:** React + Mobx <br>
+**移动端:** React Native (L) <br>
 **微信公众号:** (L)
 
 ### 功能模块
