@@ -14,5 +14,9 @@ class ExampleController extends Controller
         //
     }
 
+    static function test() {
+        echo 111;
+    }
+
     //
 }
