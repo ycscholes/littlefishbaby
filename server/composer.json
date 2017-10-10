@@ -15,7 +15,7 @@
         "fzaninotto/faker": "~1.4",
         "phpunit/phpunit": "~6.0",
         "mockery/mockery": "~0.9",
-        "flipbox/lumen-generator": "dev-fix/lumen5.5_compatiblity"
+        "flipbox/lumen-generator": "^5.4"
     },
     "autoload": {
         "psr-4": {
