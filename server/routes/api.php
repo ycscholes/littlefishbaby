@@ -9,16 +9,24 @@ $api->version('v1', [
         'as' => 'api.auth.login',
         'uses' => 'AuthController@login'
     ]);
+    $api->get('/auth/captcha', [
+        'as' => 'api.auth.captcha',
+        'uses' => 'AuthController@getCaptcha'
+    ]);
     $api->group([
         'middleware' => 'api.auth',
     ], function ($api) {
         $api->get('/', [
-            'uses' => 'User@getUser',
+            'uses' => 'UserController@getUser',
             'as' => 'api.index'
         ]);
         $api->get('/user', [
             'as' => 'api.auth.user',
-            'uses' => 'AuthController@getUser'
+            'uses' => 'AuthController@getUserResp'
+        ]);
+        $api->get('/user/tocken_refresh', [
+            'as' => 'api.auth.tockenRefresh',
+            'uses' => 'AuthController@patchRefresh'
         ]);
     });
 });

@@ -9,15 +9,18 @@ use Illuminate\Http\Request;
 
 class UserController extends BaseController
 {
+    protected $users;
+
     public function __construct(User $user) {
         $this->user = $user;
     }
 
-    public function getUsers($id, Request $request) {
-        return $request->user();
+    public function getUsers(Request $request) {
 
-        $results = DB::select('SELECT * FROM users');
+    }
 
-        return $results;
+    static function getUserByUsername($username)
+    {
+        return User::where('username', $username)->first();
     }
 }

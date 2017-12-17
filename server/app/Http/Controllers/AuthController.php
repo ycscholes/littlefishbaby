@@ -10,9 +10,14 @@ use App\Http\Controllers\Controller;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Exception\HttpResponseException;
+use Gregwar\Captcha\CaptchaBuilder;
 
 class AuthController extends Controller
 {
+    // public function __construct(UserController $user) {
+    //     $this->user = new $user;
+    // }
+
     /**
      * Handle a login request to the application.
      *
@@ -24,19 +29,25 @@ class AuthController extends Controller
     {
         try {
             $this->validate($request, [
-                'email' => 'required|email|max:255',
+                'username' => 'required|max:36',
                 'password' => 'required',
             ]);
         } catch (ValidationException $e) {
             return $e->getResponse();
         }
 
+        // if (isset($_COOKIE['phrase']) && $_COOKIE['phrase'] !== $request->input('captcha')) {
+        //     return new JsonResponse([
+        //         'message' => '验证码不正确'
+        //     ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
+
         try {
+            $params = $this->getCredentials($request);
+
             // Attempt to verify the credentials and create a token for the user
-            if (!$token = JWTAuth::attempt(
-                $this->getCredentials($request)
-            )) {
-                return $this->onUnauthorized();
+            if (!$token = JWTAuth::attempt($params)) {
+                return $this->onUnauthorized($params);
             }
         } catch (JWTException $e) {
             // Something went wrong whilst attempting to encode the token
@@ -52,11 +63,24 @@ class AuthController extends Controller
      *
      * @return JsonResponse
      */
-    protected function onUnauthorized()
+    protected function onUnauthorized($params)
     {
+        $code = Response::HTTP_UNAUTHORIZED;
+        $user = UserController::getUserByUsername($params['username']);
+
+        // if ($user) {
+        //     $user->login_attempts++;
+        //     $user->save();
+
+        //     if ($user->login_attempts > 3) {
+        //         $code = Response::HTTP_TOO_MANY_REQUESTS;
+        //     }
+        // }
+
+        // Too many login times, show captcha
         return new JsonResponse([
-            'message' => 'invalid_credentials'
-        ], Response::HTTP_UNAUTHORIZED);
+            'message' => '用户名或密码不正确'
+        ], $code);
     }
 
     /**
@@ -78,11 +102,12 @@ class AuthController extends Controller
      */
     protected function onAuthorized($token)
     {
+        $user = $this->getUser();
+        $user->login_attempts = 0;
+        $user->save();
+
         return new JsonResponse([
-            'message' => 'token_generated',
-            'data' => [
-                'token' => $token,
-            ]
+            'token' => $token
         ]);
     }
 
@@ -95,7 +120,7 @@ class AuthController extends Controller
      */
     protected function getCredentials(Request $request)
     {
-        return $request->only('email', 'password');
+        return $request->only('username', 'password');
     }
 
     /**
@@ -134,13 +159,37 @@ class AuthController extends Controller
     /**
      * Get authenticated user.
      *
-     * @return \Illuminate\Http\Response
+     * @return App\Models\User
      */
     public function getUser()
     {
-        return new JsonResponse([
-            'message' => 'authenticated_user',
-            'data' => JWTAuth::parseToken()->authenticate()
-        ]);
+        return JWTAuth::parseToken()->authenticate();
+    }
+
+    /**
+     * Get authenticated user.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getUserResp()
+    {
+        return new JsonResponse($this->getUser());
+    }
+
+    /**
+     * Get captcha.
+     *
+     * @return CaptchaBuilder
+     */
+    public function getCaptcha()
+    {
+        $captcha = new CaptchaBuilder;
+        $captcha->build();
+
+        header('Content-type: image/jpeg');
+        $captcha->output();
+
+        // setcookie('phrase', $captcha->getPhrase());
+        // $_COOKIE['phrase'] = $captcha->getPhrase();
     }
 }
